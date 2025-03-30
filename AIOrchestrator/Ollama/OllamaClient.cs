@@ -1,13 +1,12 @@
 
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace AIOrchestrator.Ollama
 {
   public static class Client
   {
-    private readonly static JsonSerializerOptions _jsonSerializerOptions = new() { PropertyNameCaseInsensitive = true };
-
     public static async Task AiRequestAsync(string prompt, string model = "mistral")
     {
       string url = "http://localhost:11434/api/generate";
@@ -32,7 +31,7 @@ namespace AIOrchestrator.Ollama
         string? line = await reader.ReadLineAsync();
         if (string.IsNullOrWhiteSpace(line)) continue;
 
-        var lineResponse = JsonSerializer.Deserialize<ApiResponse>(line, _jsonSerializerOptions);
+        var lineResponse = JsonSerializer.Deserialize<ApiResponse>(line);
         if (lineResponse?.Response != null)
         {
           Console.Write(lineResponse.Response);
@@ -42,7 +41,18 @@ namespace AIOrchestrator.Ollama
 
     private class ApiResponse
     {
+      [JsonPropertyName("model")]
+      public required string Model { get; set; }
+
+      [JsonPropertyName("created_at")]
+      public required DateTime CreatedAt { get; set; }
+
+      [JsonPropertyName("response")]
       public required string Response { get; set; }
+
+      [JsonPropertyName("done")]
+      public required bool Done { get; set; }
+
     }
   }
 }

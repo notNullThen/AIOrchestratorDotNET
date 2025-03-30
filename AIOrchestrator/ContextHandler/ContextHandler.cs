@@ -5,8 +5,12 @@ namespace AIOrchestrator.ContextHandler
   public class ChatHandler
   {
     private readonly Ollama.Client _ollamaClient = new();
-
     private readonly List<Message> messages = [];
+    private static readonly JsonSerializerOptions promptJsonSerializerOptions = new()
+    {
+      PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+      WriteIndented = true
+    };
 
     public async Task ConversationHandlerAsync(string model = "mistral")
     {
@@ -17,11 +21,6 @@ namespace AIOrchestrator.ContextHandler
         return;
       }
 
-      JsonSerializerOptions promptJsonSerializerOptions = new()
-      {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = true
-      };
       string messagesJson = JsonSerializer.Serialize(messages, promptJsonSerializerOptions);
       string prompt = @$"
 Conversation history is a JSON array of messages, where ""Role"": 0 is User's message and ""Role"": 1 is your message.
@@ -33,15 +32,15 @@ Your task is to respond to the user's input in a conversational manner.
 
 User input: {userInput}
 
-Your messages should be **very short and laconic**. Don't use JSON format in your response.
+Your responses should be **very short and laconic**. Your response should be just text.
 ";
 
-      string content = string.Empty;
       messages.Add(new() { Role = MessageRole.User, Content = userInput });
 
       await _ollamaClient.RequestAsync(prompt, model);
 
-      Console.Write("\nChatBot:\n ");
+      Console.Write("ChatBot:\n ");
+      string content = string.Empty;
       while (true)
       {
         var line = _ollamaClient.GetApiResponse();
@@ -51,7 +50,7 @@ Your messages should be **very short and laconic**. Don't use JSON format in you
         Console.Write(response);
         if (line.Done)
         {
-          Console.WriteLine("\n\n");
+          Console.Write("\n\n");
           break;
         }
       }

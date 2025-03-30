@@ -1,9 +1,10 @@
-﻿using System.Text;
+
+using System.Text;
 using System.Text.Json;
 
-namespace AIOrchestrator
+namespace AIOrchestrator.Ollama
 {
-  public class OllamaAi
+  public static class Client
   {
     private readonly static JsonSerializerOptions _jsonSerializerOptions = new() { PropertyNameCaseInsensitive = true };
 

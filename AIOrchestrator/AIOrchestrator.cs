@@ -1,13 +1,12 @@
-﻿
-using AIOrchestrator.Ollama;
+﻿namespace AIOrchestrator;
 
-namespace AIOrchestrator
+using ContextHandler;
+
+public class Chat
 {
-  public static class Chat
+  private readonly ChatHandler _chatHandler = new();
+  public async Task StartChatAsync()
   {
-    public static async Task StartChatAsync(string prompt)
-    {
-      await Client.AiRequestAsync(prompt);
-    }
+    await _chatHandler.ConversationHandlerAsync();
   }
 }

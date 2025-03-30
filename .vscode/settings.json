@@ -1,3 +1,5 @@
 {
-  "dotnet.defaultSolution": "AIOrchestrator.sln"
+  "dotnet.defaultSolution": "AIOrchestrator.sln",
+  "editor.defaultFormatter": "ms-dotnettools.csdevkit",
+  "editor.formatOnSave": true
 }

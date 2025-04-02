@@ -1,17 +1,16 @@
-namespace AIOrchestrator.ContextHandler
+namespace AIOrchestrator.Support
 {
   using System.Text.Json;
   using System.Text.Json.Serialization;
-  using Ollama;
 
   public class ChatHandler
   {
     private readonly OllamaClient _ollamaClient = new();
     private readonly List<Message> messages = [];
-    private List<string> _promptParts = [];
-    private string prefix = "   ";
-    private string _roleSeparator = "\n";
-    private string messageSeparator = "\n\n";
+    private readonly List<string> _promptParts = [];
+    private static readonly string prefix = "   ";
+    private static readonly string _roleSeparator = "\n";
+    private static readonly string messageSeparator = "\n\n";
 
     private static readonly JsonSerializerOptions promptJsonSerializerOptions = new()
     {

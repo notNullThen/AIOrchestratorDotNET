@@ -2,7 +2,7 @@ namespace AIOrchestrator.Support
 {
   using System.Text;
   using Parquet;
-  public class ParquetReaderHelper
+  public class ParquetHelper
   {
     private const string _separator = "\n\n\n\n\n\n";
 

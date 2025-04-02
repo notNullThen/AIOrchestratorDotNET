@@ -8,6 +8,7 @@ namespace AIOrchestrator.ContextHandler
   {
     private readonly OllamaClient _ollamaClient = new();
     private readonly List<Message> messages = [];
+    private List<string> _promptParts = [];
 
     private static readonly JsonSerializerOptions promptJsonSerializerOptions = new()
     {
@@ -28,23 +29,27 @@ namespace AIOrchestrator.ContextHandler
       {
         return;
       }
-
-      string messagesJson = JsonSerializer.Serialize(messages, promptJsonSerializerOptions);
-      string prompt = @$"
-{Roles.System} message:
-Conversation history is a JSON array of messages, where ""Role"": 0 is User's message and ""Role"": 1 is your message.
-
-Your conversation history:
-{messagesJson}
-
-Your task is to respond to the user's input in a conversational manner.
-
-User input: {userInput}
-
-Your responses should be **short and laconic**. Your response should be just a text - a continuation of dialogue.
-";
-
       messages.Add(new() { Role = Roles.User, Content = userInput });
+      string messagesJson = JsonSerializer.Serialize(messages, promptJsonSerializerOptions);
+
+      /* PROMPT */
+
+      // Beginning
+      _promptParts.Add($"{Roles.System} message:");
+
+      // Conversation history
+      _promptParts.Add(@$"
+You are {Roles.Assistant}.
+Conversation history is a JSON array of messages with defined roles.
+Your conversation history:
+{messagesJson}");
+
+      // Task
+      _promptParts.Add(@$"
+Your task is to respond to the user's input in a conversational manner.
+Your responses should be **short and laconic**. Don't use quotes in start and end of your response.");
+
+      string prompt = string.Join("\n", _promptParts);
 
       await _ollamaClient.RequestAsync(prompt, Roles.System, model, stream: true);
 

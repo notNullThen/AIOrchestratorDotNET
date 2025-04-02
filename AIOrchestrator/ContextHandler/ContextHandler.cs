@@ -9,6 +9,9 @@ namespace AIOrchestrator.ContextHandler
     private readonly OllamaClient _ollamaClient = new();
     private readonly List<Message> messages = [];
     private List<string> _promptParts = [];
+    private string prefix = "   ";
+    private string _roleSeparator = "\n";
+    private string messageSeparator = "\n\n";
 
     private static readonly JsonSerializerOptions promptJsonSerializerOptions = new()
     {
@@ -23,7 +26,7 @@ namespace AIOrchestrator.ContextHandler
 
     public async Task ConversationHandlerAsync(string model = "mistral")
     {
-      Console.Write("You:\n  ");
+      Console.Write($"{_roleSeparator}{prefix}You:\n");
       string userInput = Console.ReadLine()!;
       if (userInput == "exit")
       {
@@ -47,31 +50,40 @@ Your conversation history:
       // Task
       _promptParts.Add(@$"
 Your task is to respond to the user's input in a conversational manner.
-Your responses should be **short and laconic**. Don't use quotes in start and end of your response.");
+Your responses should be **very short and laconic**. Don't use quotes in start and end of your response.");
 
       string prompt = string.Join("\n", _promptParts);
 
       await _ollamaClient.RequestAsync(prompt, Roles.System, model, stream: true);
 
-      Console.Write("ChatBot:\n  ");
+      var content = ConsoleStreamResponseAsync();
+
+      messages.Add(new() { Role = Roles.Assistant, Content = content });
+
+      await ConversationHandlerAsync(model);
+    }
+
+    private string ConsoleStreamResponseAsync()
+    {
+      Console.Write($"{_roleSeparator}{prefix}ChatBot:\n");
       string content = string.Empty;
-      while (true)
+
+      ApiResponse line = new() { Done = false };
+      while (!line.Done)
       {
-        var line = _ollamaClient.GetApiResponse();
+        line = _ollamaClient.GetApiResponse();
         var response = line.Response;
 
         content += response;
         Console.Write(response);
         if (line.Done)
         {
-          Console.Write("\n\n");
-          break;
+          Console.Write($"{messageSeparator}");
+          return content;
         }
       }
 
-      messages.Add(new() { Role = Roles.Assistant, Content = content });
-
-      await ConversationHandlerAsync(model);
+      return content;
     }
   }
 }

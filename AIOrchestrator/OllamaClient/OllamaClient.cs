@@ -14,6 +14,36 @@ internal sealed class OllamaClient(
         ? new()
         : new() { Timeout = (TimeSpan)timeout };
 
+    public async Task<OllamaTagsResponse> GetTagsAsync()
+    {
+        var url = $"{baseUrl}/api/tags";
+        HttpResponseMessage response;
+        try
+        {
+            response = await _httpClient.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new Exception("Couldn't fetch tags from Ollama server", ex);
+        }
+
+        var responseJson = await response.Content.ReadAsStringAsync();
+
+        try
+        {
+            return JsonSerializer.Deserialize<OllamaTagsResponse>(responseJson)
+                ?? new OllamaTagsResponse();
+        }
+        catch (JsonException ex)
+        {
+            throw new Exception(
+                $"Failed to deserialize Ollama tags response. Content: {responseJson}",
+                ex
+            );
+        }
+    }
+
     public async Task<ApiResponse> RequestAsync(
         string prompt,
         string model,

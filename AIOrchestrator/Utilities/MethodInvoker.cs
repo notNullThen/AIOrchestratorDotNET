@@ -3,42 +3,70 @@ namespace AIOrchestrator.Utilities;
 using System.ComponentModel;
 using System.Reflection;
 using System.Text.Json;
+using AIOrchestrator.Core;
 using Core.Types;
 
-internal static class MethodInvoker
+internal class MethodInvoker(ErrorHandler errorHandler)
 {
-    private static readonly JsonSerializerOptions _jsonSerializerOptions = new()
+    private readonly JsonSerializerOptions _jsonSerializerOptions = new()
     {
         PropertyNameCaseInsensitive = true,
     };
 
-    public static object Execute<T>(FunctionCall instruction, T targetInstance)
+    private readonly JsonSerializerOptions _prettyJsonSerializerOptions = new()
     {
-        var method =
-            targetInstance!
-                .GetType()
-                .GetMethod(
-                    instruction.Function,
-                    BindingFlags.Instance
-                        | BindingFlags.Static
-                        | BindingFlags.Public
-                        | BindingFlags.NonPublic
-                )
-            ?? throw new MissingMethodException(
-                $"Method {instruction.Function}() not found in {targetInstance.GetType().Name} class."
+        WriteIndented = true,
+    };
+
+    public object Execute<T>(FunctionCall instruction, T targetInstance)
+    {
+        errorHandler.SetLatestAiOutput(
+            JsonSerializer.Serialize(instruction, _prettyJsonSerializerOptions)
+        );
+
+        try
+        {
+            var method =
+                targetInstance!
+                    .GetType()
+                    .GetMethod(
+                        instruction.Function,
+                        BindingFlags.Instance
+                            | BindingFlags.Static
+                            | BindingFlags.Public
+                            | BindingFlags.NonPublic
+                    )
+                ?? throw new MissingMethodException(
+                    errorHandler.GetFullErrorMessage(
+                        $"Method {instruction.Function}() not found in {targetInstance.GetType().Name} class."
+                    )
+                );
+
+            var parameters = ConvertParametersForMethod(instruction.Parameters, method);
+
+            return method.Invoke(targetInstance, parameters)!;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(
+                errorHandler.GetFullErrorMessage(
+                    $"Error executing method instructions:\n{JsonSerializer.Serialize(instruction, _prettyJsonSerializerOptions)}\n"
+                ),
+                ex
             );
-
-        var parameters = ConvertParametersForMethod(instruction.Parameters, method);
-
-        return method.Invoke(targetInstance, parameters)!;
+        }
     }
 
-    public static FunctionCall Deserialize(string jsonInstruction)
+    public FunctionCall Deserialize(string jsonInstruction)
     {
+        errorHandler.SetLatestAiOutput(jsonInstruction);
+
         if (string.IsNullOrWhiteSpace(jsonInstruction))
         {
             throw new ArgumentException(
-                "AI response resulted in an empty JSON instruction.",
+                errorHandler.GetFullErrorMessage(
+                    "AI response resulted in an empty JSON instruction."
+                ),
                 nameof(jsonInstruction)
             );
         }
@@ -53,7 +81,9 @@ internal static class MethodInvoker
         catch (Exception exception)
         {
             throw new Exception(
-                $"Failed to deserialize function call. Response was:\n{jsonInstruction}",
+                errorHandler.GetFullErrorMessage(
+                    $"Failed to deserialize function call. Response was:\n{jsonInstruction}"
+                ),
                 exception
             );
         }

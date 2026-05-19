@@ -16,6 +16,13 @@ public sealed class AiManager(
 {
     public ContextHandler<FunctionCallResponse> ContextHandler => _contextHandler;
 
+    private ErrorHandler? _errorHandler;
+    public ErrorHandler ErrorHandler =>
+        _errorHandler ??= new ErrorHandler(modelName, _contextHandler);
+
+    private MethodInvoker? _methodInvokerField;
+    private MethodInvoker _methodInvoker => _methodInvokerField ??= new MethodInvoker(ErrorHandler);
+
     private bool Debug { get; set; }
 
     private string? _userInput;
@@ -78,7 +85,7 @@ You MUST process the STATE and reply with EXACTLY ONE JSON function call.
         {
             var function = await GetFunctionAsync(prompt: ManagementPrompt);
 
-            _aiOutput = MethodInvoker.Execute(function, appInstance);
+            _aiOutput = _methodInvoker.Execute(function, appInstance);
 
             var functionResponse = new FunctionCallResponse
             {
@@ -94,10 +101,15 @@ You MUST process the STATE and reply with EXACTLY ONE JSON function call.
 
             await ConversationAsync();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             _shouldExit = true;
-            throw;
+            throw new Exception(
+                ErrorHandler.GetFullErrorMessage(
+                    "An error occurred during AI conversation execution."
+                ),
+                ex
+            );
         }
     }
 
@@ -105,6 +117,8 @@ You MUST process the STATE and reply with EXACTLY ONE JSON function call.
     {
         _userInput = userInput;
         _shouldExit = false;
+        ErrorHandler.SetUserInput(userInput);
+
         appInstance.OnExit = Exit;
         await ConversationAsync();
     }
@@ -129,7 +143,9 @@ You MUST process the STATE and reply with EXACTLY ONE JSON function call.
         var response = ollamaResponse.Response;
         var functionJson = MarkdownProcess.RemoveCodeMarkdown(response);
 
-        return MethodInvoker.Deserialize(functionJson);
+        ErrorHandler.SetLatestAiOutput(response);
+
+        return _methodInvoker.Deserialize(functionJson);
     }
 
     public void Exit()

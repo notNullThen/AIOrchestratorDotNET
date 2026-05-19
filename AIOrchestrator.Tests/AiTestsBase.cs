@@ -48,7 +48,9 @@ public abstract class AiTestsBase
         if (AiManager == null)
         {
             throw new InvalidOperationException(
-                $"{nameof(AiManager)} must be set before setting loop detection."
+                AiManager!.ErrorHandler.GetFullErrorMessage(
+                    $"{nameof(AiManager)} must be set before setting loop detection."
+                )
             );
         }
 
@@ -57,7 +59,9 @@ public abstract class AiTestsBase
             if (context.Count > contextCountLimit)
             {
                 throw new InvalidOperationException(
-                    $"Seems like we went into a loop! Context count is more than {contextCountLimit}. "
+                    AiManager!.ErrorHandler.GetFullErrorMessage(
+                        $"Seems like we went into a loop! Context count is more than {contextCountLimit}. "
+                    )
                 );
             }
         };

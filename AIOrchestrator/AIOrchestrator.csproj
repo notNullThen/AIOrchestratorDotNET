@@ -8,7 +8,7 @@
     <!-- NuGet Package Properties -->
     <IsPackable>true</IsPackable>
     <PackageId>AIOrchestrator</PackageId>
-    <Version>0.1.11</Version>
+    <Version>0.1.12</Version>
     <Authors>YourName</Authors>
     <Description>An AI Orchestrator project.</Description>
     <PackageTags>ai;orchestrator</PackageTags>

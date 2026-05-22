@@ -46,7 +46,7 @@ YOU MUST strictly adhere to the following JSON format.
 
 You MUST strictly follow these JSON format types:
 - ""Function"": string
-- ""Parameters"": string[]
+- ""Parameters"": string[] (only values, no parameter names)
 
 RULES:
 1. You MUST return ONLY a single JSON object.
@@ -74,8 +74,9 @@ You MUST process the STATE and reply with EXACTLY ONE JSON function call.
 
     public void SetDebug(bool debug) => Debug = debug;
 
-    public async Task ConversationAsync()
+    public async Task ConversationAsync(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         if (_shouldExit)
         {
             return;
@@ -83,7 +84,7 @@ You MUST process the STATE and reply with EXACTLY ONE JSON function call.
 
         try
         {
-            var function = await GetFunctionAsync(prompt: ManagementPrompt);
+            var function = await GetFunctionAsync(prompt: ManagementPrompt, cancellationToken);
 
             _aiOutput = _methodInvoker.Execute(function, appInstance);
 
@@ -99,7 +100,12 @@ You MUST process the STATE and reply with EXACTLY ONE JSON function call.
                 Console.WriteLine(_contextHandler.GetLastContextPartJson());
             }
 
-            await ConversationAsync();
+            await ConversationAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            _shouldExit = true;
+            throw;
         }
         catch (Exception ex)
         {
@@ -113,17 +119,20 @@ You MUST process the STATE and reply with EXACTLY ONE JSON function call.
         }
     }
 
-    public async Task StartAsync(string userInput)
+    public async Task StartAsync(string userInput, CancellationToken cancellationToken = default)
     {
         _userInput = userInput;
         _shouldExit = false;
         ErrorHandler.SetUserInput(userInput);
 
         appInstance.OnExit = Exit;
-        await ConversationAsync();
+        await ConversationAsync(cancellationToken);
     }
 
-    private async Task<FunctionCall> GetFunctionAsync(string prompt)
+    private async Task<FunctionCall> GetFunctionAsync(
+        string prompt,
+        CancellationToken cancellationToken = default
+    )
     {
         var apiOptions =
             options == null
@@ -137,7 +146,8 @@ You MUST process the STATE and reply with EXACTLY ONE JSON function call.
         var ollamaResponse = await _ollamaClient.RequestAsync(
             prompt: prompt,
             model: modelName,
-            options: apiOptions
+            options: apiOptions,
+            cancellationToken: cancellationToken
         );
 
         var response = ollamaResponse.Response;

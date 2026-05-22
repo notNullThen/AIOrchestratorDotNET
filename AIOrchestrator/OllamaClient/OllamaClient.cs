@@ -14,13 +14,15 @@ internal sealed class OllamaClient(
         ? new()
         : new() { Timeout = (TimeSpan)timeout };
 
-    public async Task<OllamaTagsResponse> GetTagsAsync()
+    public async Task<OllamaTagsResponse> GetTagsAsync(
+        CancellationToken cancellationToken = default
+    )
     {
         var url = $"{baseUrl}/api/tags";
         HttpResponseMessage response;
         try
         {
-            response = await _httpClient.GetAsync(url);
+            response = await _httpClient.GetAsync(url, cancellationToken);
             response.EnsureSuccessStatusCode();
         }
         catch (HttpRequestException ex)
@@ -28,7 +30,7 @@ internal sealed class OllamaClient(
             throw new Exception("Couldn't fetch tags from Ollama server", ex);
         }
 
-        var responseJson = await response.Content.ReadAsStringAsync();
+        var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
 
         try
         {
@@ -48,7 +50,8 @@ internal sealed class OllamaClient(
         string prompt,
         string model,
         Role role = Role.User,
-        ApiRequestOptions? options = null
+        ApiRequestOptions? options = null,
+        CancellationToken cancellationToken = default
     )
     {
         var requestMessage = GetRequestMessage(
@@ -63,7 +66,7 @@ internal sealed class OllamaClient(
             }
         );
 
-        return await GetResponseAsync(requestMessage);
+        return await GetResponseAsync(requestMessage, cancellationToken);
     }
 
     public static HttpRequestMessage GetRequestMessage(string url, ApiRequest request)
@@ -75,14 +78,18 @@ internal sealed class OllamaClient(
         };
     }
 
-    public async Task<ApiResponse> GetResponseAsync(HttpRequestMessage requestMessage)
+    public async Task<ApiResponse> GetResponseAsync(
+        HttpRequestMessage requestMessage,
+        CancellationToken cancellationToken = default
+    )
     {
         HttpResponseMessage response;
         try
         {
             response = await _httpClient.SendAsync(
                 requestMessage,
-                HttpCompletionOption.ResponseHeadersRead
+                HttpCompletionOption.ResponseHeadersRead,
+                cancellationToken
             );
             response.EnsureSuccessStatusCode();
         }
@@ -96,7 +103,7 @@ internal sealed class OllamaClient(
             throw new Exception("Ollama API error", ex);
         }
 
-        var responseJson = await response.Content.ReadAsStringAsync();
+        var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (string.IsNullOrWhiteSpace(responseJson))
         {

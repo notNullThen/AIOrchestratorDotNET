@@ -92,14 +92,23 @@ internal class MethodInvoker(ErrorHandler errorHandler)
     private static object[] ConvertParametersForMethod(string[] rawParameters, MethodInfo method)
     {
         var methodParams = method.GetParameters();
-        var convertedParameters = new object[rawParameters.Length];
 
-        for (var i = 0; i < rawParameters.Length; i++)
+        if (rawParameters.Length > methodParams.Length)
+        {
+            throw new TargetParameterCountException(
+                $"Method {method.Name}() received more parameters than expected."
+            );
+        }
+
+        var convertedParameters = new object[methodParams.Length];
+
+        for (var i = 0; i < methodParams.Length; i++)
         {
             var parameterType = methodParams[i].ParameterType;
+            var rawParameter = i < rawParameters.Length ? rawParameters[i] : string.Empty;
 
             var converter = TypeDescriptor.GetConverter(parameterType);
-            convertedParameters[i] = converter.ConvertFromString(rawParameters[i])!;
+            convertedParameters[i] = converter.ConvertFromString(rawParameter)!;
         }
 
         return convertedParameters;

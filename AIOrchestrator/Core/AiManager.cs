@@ -53,9 +53,16 @@ RULES:
 2. You MUST NOT wrap the JSON in Markdown formatting, backticks, or write any text explanations.
 3. You MUST call EXACTLY ONE function per response.
 4. You MUST use ONLY functions from the FUNCTIONS list.
-5. If the task is fully completed, you MUST call {nameof(appInstance.Exit)}.
-6. You MUST operate step-by-step.
-7. You MUST evaluate History before deciding the next step.
+5. Before choosing a function, you MUST compare the User request with History and decide whether the requested result is already satisfied.
+6. If History already contains the requested result, or the task is otherwise fully completed, you MUST immediately call {nameof(appInstance.Exit)} with no parameters. This is the ONLY valid action in that situation. Do NOT repeat a previous function or call another function.
+7. The required completion response is exactly:
+{{
+  ""Function"": ""{nameof(appInstance.Exit)}"",
+  ""Parameters"": []
+}}
+8. You MUST NOT call {nameof(appInstance.Exit)} while another function call is still required to satisfy the User request.
+9. You MUST operate step-by-step.
+10. You MUST evaluate History before deciding the next step.
 
 FUNCTIONS:
 {appInstance.GetDescription()}
@@ -67,7 +74,7 @@ STATE:
 User: {_userInput}
 History: {_contextHandler.GetContextJson()}
 
-You MUST process the STATE and reply with EXACTLY ONE JSON function call.
+You MUST process the STATE and reply with EXACTLY ONE JSON function call. If the STATE already satisfies the User request, that call MUST be {nameof(appInstance.Exit)}.
 ";
 
     public string GetManagementPrompt() => ManagementPrompt;

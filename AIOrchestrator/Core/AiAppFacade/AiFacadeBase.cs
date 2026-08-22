@@ -2,8 +2,10 @@ namespace AIOrchestrator.Core.AiAppFacade;
 
 using Types;
 
-public abstract class AiAppFacadeBase
+public abstract class AiAppFacadeBase(bool multipleFunctionsAtOneResponse)
 {
+    public bool MultipleFunctionsAtOneResponse => multipleFunctionsAtOneResponse;
+
     public Action? OnExit { get; set; }
 
     public void Exit()

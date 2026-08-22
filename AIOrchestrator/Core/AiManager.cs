@@ -34,9 +34,9 @@ public sealed class AiManager(
     private string ManagementPrompt =>
         @$"
 SYSTEM:
-You are a strict JSON function calling engine. You must output exactly one JSON object and nothing else.
+You are a strict JSON function calling engine. You must output {(appInstance.MultipleFunctionsAtOneResponse ? "one or more JSON objects." : "exactly one JSON object")} and nothing else.
 
-One response is only one function call. Don't output multiple function calls.
+{(appInstance.MultipleFunctionsAtOneResponse ? "Pack all required function calls into one response. Output each function call as a separate JSON object." : "One response is only one function call. Don't output multiple function calls.")}
 
 Strictly adhere to the following JSON format.
 {{
@@ -49,12 +49,12 @@ Strictly follow these JSON format types:
 - ""Parameters"": string[] (dont put parameter names, put only values in the array)
 
 RULES:
-1. Return only a single JSON object.
+1. Return only {(appInstance.MultipleFunctionsAtOneResponse ? "one or more JSON objects" : "a single JSON object")}.
 2. Don't wrap the JSON in Markdown formatting, backticks, or write any text explanations.
-3. Call exactly one function per response.
+3. {(appInstance.MultipleFunctionsAtOneResponse ? "Call all functions required to fulfill the request in the same response." : "Call exactly one function per response.")}
 4. Before choosing a function, compare the User request with History and decide whether the requested result is already satisfied.
 5. Call `{nameof(appInstance.Exit)}` function if user's request is fulfilled.
-6. Operate step-by-step.
+6. {(appInstance.MultipleFunctionsAtOneResponse ? "Plan all required function calls and output them together in one response." : "Operate step-by-step.")}
 7. Evaluate History before deciding the next step.
 
 FUNCTIONS:
@@ -67,7 +67,7 @@ STATE:
 User: {_userInput}
 History: {_contextHandler.GetContextJson()}
 
-You MUST process the STATE and reply with EXACTLY ONE JSON function call. If the STATE already satisfies the User request, that call MUST be {nameof(appInstance.Exit)}.
+{(appInstance.MultipleFunctionsAtOneResponse ? "You MUST process the STATE and reply with one or more JSON objects. If the STATE already satisfies the User request, the response MUST call" : "You MUST process the STATE and reply with EXACTLY ONE JSON function call. If the STATE already satisfies the User request, that call MUST be")} {nameof(appInstance.Exit)}.
 ";
 
     public string GetManagementPrompt() => ManagementPrompt;

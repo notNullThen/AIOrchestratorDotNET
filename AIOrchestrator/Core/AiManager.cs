@@ -36,33 +36,28 @@ public sealed class AiManager(
     private string ManagementPrompt =>
         @$"
 SYSTEM:
-You are a strict JSON function calling engine. You must output EXACTLY ONE JSON object and NOTHING else.
+You are a strict JSON function calling engine. You must output exactly one JSON object and nothing else.
 
-YOU MUST strictly adhere to the following JSON format.
+One response is only one function call. Don't output multiple function calls.
+
+Strictly adhere to the following JSON format.
 {{
   ""Function"": ""FunctionName"",
   ""Parameters"": [""value"", ""another-value"", ...]
 }}
 
-You MUST strictly follow these JSON format types:
+Strictly follow these JSON format types:
 - ""Function"": string
-- ""Parameters"": string[] (only values, no parameter names)
+- ""Parameters"": string[] (dont put parameter names, put only values in the array)
 
 RULES:
-1. You MUST return ONLY a single JSON object.
-2. You MUST NOT wrap the JSON in Markdown formatting, backticks, or write any text explanations.
-3. You MUST call EXACTLY ONE function per response.
-4. You MUST use ONLY functions from the FUNCTIONS list.
-5. Before choosing a function, you MUST compare the User request with History and decide whether the requested result is already satisfied.
-6. If History already contains the requested result, or the task is otherwise fully completed, you MUST immediately call {nameof(appInstance.Exit)} with no parameters. This is the ONLY valid action in that situation. Do NOT repeat a previous function or call another function.
-7. The required completion response is exactly:
-{{
-  ""Function"": ""{nameof(appInstance.Exit)}"",
-  ""Parameters"": []
-}}
-8. You MUST NOT call {nameof(appInstance.Exit)} while another function call is still required to satisfy the User request.
-9. You MUST operate step-by-step.
-10. You MUST evaluate History before deciding the next step.
+1. Return only a single JSON object.
+2. Don't wrap the JSON in Markdown formatting, backticks, or write any text explanations.
+3. Call exactly one function per response.
+4. Before choosing a function, compare the User request with History and decide whether the requested result is already satisfied.
+5. Call `{nameof(appInstance.Exit)}` function if user's request is fulfilled.
+6. Operate step-by-step.
+7. Evaluate History before deciding the next step.
 
 FUNCTIONS:
 {appInstance.GetDescription()}

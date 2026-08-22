@@ -16,10 +16,13 @@ public sealed class AiManager(
 {
     public ContextHandler<FunctionCallResponse> ContextHandler => _contextHandler;
 
-    public ErrorHandler ErrorHandler => new(modelName, _contextHandler);
+    public ErrorHandler ErrorHandler =>
+        _errorHandlerField ??= new ErrorHandler(modelName, _contextHandler);
 
+    // Store ErrorHandler in a private field so it is not recreated on every class initiation and the error information is not lost.
+    private ErrorHandler? _errorHandlerField;
     private MethodInvoker? _methodInvokerField;
-    private MethodInvoker _methodInvoker => _methodInvokerField ??= new MethodInvoker(ErrorHandler);
+    private MethodInvoker _methodInvoker => _methodInvokerField ??= new MethodInvoker();
 
     private string? _userInput;
     private bool _shouldExit;
@@ -79,27 +82,33 @@ You MUST process the STATE and reply with EXACTLY ONE JSON function call. If the
 
         try
         {
-            var functionsList = await GetFunctionAsync(prompt: ManagementPrompt, cancellationToken);
-
-            foreach (var function in functionsList)
+            while (!_shouldExit)
             {
-                if (function == null)
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var functionsList = await GetFunctionAsync(
+                    prompt: ManagementPrompt,
+                    cancellationToken
+                );
+
+                foreach (var function in functionsList)
                 {
-                    continue;
+                    if (function == null)
+                    {
+                        continue;
+                    }
+
+                    var functionResult = _methodInvoker.Execute(function, appInstance);
+
+                    var functionResponse = new FunctionCallResponse
+                    {
+                        Function = function.Function,
+                        Parameters = function.Parameters,
+                        Response = functionResult,
+                    };
+                    _contextHandler.AddToContext(functionResponse);
                 }
-
-                var functionResult = _methodInvoker.Execute(function, appInstance);
-
-                var functionResponse = new FunctionCallResponse
-                {
-                    Function = function.Function,
-                    Parameters = function.Parameters,
-                    Response = functionResult,
-                };
-                _contextHandler.AddToContext(functionResponse);
             }
-
-            await ConversationAsync(cancellationToken);
         }
         catch (OperationCanceledException)
         {

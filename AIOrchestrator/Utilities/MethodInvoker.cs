@@ -3,10 +3,9 @@ namespace AIOrchestrator.Utilities;
 using System.ComponentModel;
 using System.Reflection;
 using System.Text.Json;
-using AIOrchestrator.Core;
 using Core.Types;
 
-internal class MethodInvoker(ErrorHandler errorHandler)
+internal class MethodInvoker
 {
     private readonly JsonSerializerOptions _prettyJsonSerializerOptions = new()
     {
@@ -15,10 +14,6 @@ internal class MethodInvoker(ErrorHandler errorHandler)
 
     public object Execute<T>(FunctionCall instruction, T targetInstance)
     {
-        errorHandler.SetLatestAiOutput(
-            JsonSerializer.Serialize(instruction, _prettyJsonSerializerOptions)
-        );
-
         try
         {
             var method =
@@ -32,9 +27,7 @@ internal class MethodInvoker(ErrorHandler errorHandler)
                             | BindingFlags.NonPublic
                     )
                 ?? throw new MissingMethodException(
-                    errorHandler.GetFullErrorMessage(
-                        $"Method {instruction.Function}() not found in {targetInstance.GetType().Name} class."
-                    )
+                    $"Method {instruction.Function}() not found in {targetInstance.GetType().Name} class."
                 );
 
             var parameters = ConvertParametersForMethod(instruction.Parameters, method);
@@ -44,9 +37,7 @@ internal class MethodInvoker(ErrorHandler errorHandler)
         catch (Exception ex)
         {
             throw new Exception(
-                errorHandler.GetFullErrorMessage(
-                    $"Error executing method instructions:\n{JsonSerializer.Serialize(instruction, _prettyJsonSerializerOptions)}\n"
-                ),
+                $"Error executing method instructions:\n{JsonSerializer.Serialize(instruction, _prettyJsonSerializerOptions)}\n",
                 ex
             );
         }

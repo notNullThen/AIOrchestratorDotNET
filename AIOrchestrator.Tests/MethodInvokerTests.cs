@@ -1,6 +1,5 @@
 namespace AIOrchestratorTests;
 
-using AIOrchestrator.Core;
 using AIOrchestrator.Core.Types;
 using AIOrchestrator.Utilities;
 
@@ -10,9 +9,7 @@ public sealed class MethodInvokerTests
     [TestMethod]
     public void ExecuteShouldUseEmptyStringForMissingParameter()
     {
-        var contextHandler = new ContextHandler<FunctionCallResponse>();
-        var errorHandler = new ErrorHandler("test-model", contextHandler);
-        var methodInvoker = new MethodInvoker(errorHandler);
+        var methodInvoker = new MethodInvoker();
         var functionCall = new FunctionCall
         {
             Function = nameof(TestTarget.JoinValues),

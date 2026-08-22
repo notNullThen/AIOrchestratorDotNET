@@ -8,11 +8,6 @@ using Core.Types;
 
 internal class MethodInvoker(ErrorHandler errorHandler)
 {
-    private readonly JsonSerializerOptions _jsonSerializerOptions = new()
-    {
-        PropertyNameCaseInsensitive = true,
-    };
-
     private readonly JsonSerializerOptions _prettyJsonSerializerOptions = new()
     {
         WriteIndented = true,
@@ -53,38 +48,6 @@ internal class MethodInvoker(ErrorHandler errorHandler)
                     $"Error executing method instructions:\n{JsonSerializer.Serialize(instruction, _prettyJsonSerializerOptions)}\n"
                 ),
                 ex
-            );
-        }
-    }
-
-    public FunctionCall Deserialize(string jsonInstruction)
-    {
-        errorHandler.SetLatestAiOutput(jsonInstruction);
-
-        if (string.IsNullOrWhiteSpace(jsonInstruction))
-        {
-            throw new ArgumentException(
-                errorHandler.GetFullErrorMessage(
-                    "AI response resulted in an empty JSON instruction."
-                ),
-                nameof(jsonInstruction)
-            );
-        }
-
-        try
-        {
-            return JsonSerializer.Deserialize<FunctionCall>(
-                jsonInstruction,
-                _jsonSerializerOptions
-            )!;
-        }
-        catch (Exception exception)
-        {
-            throw new Exception(
-                errorHandler.GetFullErrorMessage(
-                    $"Failed to deserialize function call. Response was:\n{jsonInstruction}"
-                ),
-                exception
             );
         }
     }

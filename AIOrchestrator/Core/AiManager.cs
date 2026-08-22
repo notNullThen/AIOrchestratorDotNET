@@ -16,9 +16,7 @@ public sealed class AiManager(
 {
     public ContextHandler<FunctionCallResponse> ContextHandler => _contextHandler;
 
-    private ErrorHandler? _errorHandler;
-    public ErrorHandler ErrorHandler =>
-        _errorHandler ??= new ErrorHandler(modelName, _contextHandler);
+    public ErrorHandler ErrorHandler => new(modelName, _contextHandler);
 
     private MethodInvoker? _methodInvokerField;
     private MethodInvoker _methodInvoker => _methodInvokerField ??= new MethodInvoker(ErrorHandler);
@@ -86,20 +84,28 @@ You MUST process the STATE and reply with EXACTLY ONE JSON function call. If the
 
         try
         {
-            var function = await GetFunctionAsync(prompt: ManagementPrompt, cancellationToken);
+            var functionsList = await GetFunctionAsync(prompt: ManagementPrompt, cancellationToken);
 
-            _aiOutput = _methodInvoker.Execute(function, appInstance);
+            foreach (var function in functionsList)
+            {
+                if (function == null)
+                {
+                    continue;
+                }
 
-            var functionResponse = new FunctionCallResponse
-            {
-                Function = function.Function,
-                Parameters = function.Parameters,
-                Response = _aiOutput,
-            };
-            _contextHandler.AddToContext(functionResponse);
-            if (Debug)
-            {
-                Console.WriteLine(_contextHandler.GetLastContextPartJson());
+                _aiOutput = _methodInvoker.Execute(function, appInstance);
+
+                var functionResponse = new FunctionCallResponse
+                {
+                    Function = function.Function,
+                    Parameters = function.Parameters,
+                    Response = _aiOutput,
+                };
+                _contextHandler.AddToContext(functionResponse);
+                if (Debug)
+                {
+                    Console.WriteLine(_contextHandler.GetLastContextPartJson());
+                }
             }
 
             await ConversationAsync(cancellationToken);
@@ -131,7 +137,7 @@ You MUST process the STATE and reply with EXACTLY ONE JSON function call. If the
         await ConversationAsync(cancellationToken);
     }
 
-    private async Task<FunctionCall> GetFunctionAsync(
+    private async Task<List<FunctionCall?>> GetFunctionAsync(
         string prompt,
         CancellationToken cancellationToken = default
     )
@@ -153,11 +159,10 @@ You MUST process the STATE and reply with EXACTLY ONE JSON function call. If the
         );
 
         var response = ollamaResponse.Response;
-        var functionJson = MarkdownProcess.RemoveCodeMarkdown(response);
 
         ErrorHandler.SetLatestAiOutput(response);
 
-        return _methodInvoker.Deserialize(functionJson);
+        return FunctionsDeserializer.Deserialize<FunctionCall>(response);
     }
 
     public void Exit()

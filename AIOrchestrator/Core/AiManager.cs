@@ -153,7 +153,7 @@ You MUST process the STATE and reply with EXACTLY ONE JSON function call. If the
 
         ErrorHandler.SetLatestAiOutput(response);
 
-        return FunctionsDeserializer.Deserialize<FunctionCall>(response);
+        return FunctionsDeserializer.Deserialize(response);
     }
 
     public void Exit() => _shouldExit = true;

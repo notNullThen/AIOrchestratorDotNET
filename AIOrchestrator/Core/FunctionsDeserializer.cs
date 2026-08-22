@@ -2,40 +2,55 @@ namespace AIOrchestrator.Core;
 
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using AIOrchestrator.Core.Types;
 
 public static class FunctionsDeserializer
 {
     private const string FunctionStart = "{\"function\":\"";
-    private const string FunctionEnd = "\"}";
+    private const string FunctionEnd = "]}";
 
-    private static readonly Regex _functionStartRegex = FunctionsDeserializerRegex.FunctionStart();
-    private static readonly Regex _functionEndRegex = FunctionsDeserializerRegex.FunctionEnd();
+    private static readonly Regex _functionCallStartRegex =
+        FunctionsDeserializerRegex.FunctionCallStart();
+    private static readonly Regex _functionCallEndRegex =
+        FunctionsDeserializerRegex.FunctionCallEnd();
 
     private static readonly JsonSerializerOptions _caseInsensitiveJson = new()
     {
         PropertyNameCaseInsensitive = true,
     };
 
-    public static List<T?> Deserialize<T>(string aiResponse)
+    public static List<FunctionCall?> Deserialize(string aiResponse)
     {
-        var functionsJsonList = GetFunctionsJsonList(aiResponse);
+        try
+        {
+            var functionsJsonList = GetFunctionsJsonList(aiResponse);
 
-        var functions = functionsJsonList
-            .Select(json => JsonSerializer.Deserialize<T>(json, _caseInsensitiveJson))
-            .ToList();
-
-        return functions;
+            return
+            [
+                .. functionsJsonList.Select(json =>
+                    JsonSerializer.Deserialize<FunctionCall>(json, _caseInsensitiveJson)
+                ),
+            ];
+        }
+        catch (Exception exception)
+        {
+            throw new JsonException(
+                $"Failed to deserialize AI response into {nameof(FunctionCall)}. "
+                    + $"AI response: {aiResponse}",
+                exception
+            );
+        }
     }
 
     private static List<string> GetFunctionsJsonList(string aiResponse)
     {
-        var rawTextList = _functionStartRegex.Split(aiResponse).Skip(1).ToList();
+        var rawTextList = _functionCallStartRegex.Split(aiResponse).Skip(1).ToList();
 
         var functionsJsonList = rawTextList
             .Select(rawText =>
             {
                 var rawTextWithStart = string.Concat(FunctionStart, rawText);
-                return string.Concat(_functionEndRegex.Split(rawTextWithStart)[0], FunctionEnd);
+                return string.Concat(_functionCallEndRegex.Split(rawTextWithStart)[0], FunctionEnd);
             })
             .ToList();
 

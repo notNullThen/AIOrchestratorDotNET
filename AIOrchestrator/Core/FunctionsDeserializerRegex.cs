@@ -6,8 +6,8 @@ using System.Text.RegularExpressions;
 internal static partial class FunctionsDeserializerRegex
 {
     [GeneratedRegex(@"\{\s*""function""\s*:\s*""", RegexOptions.IgnoreCase)]
-    internal static partial Regex FunctionStart();
+    internal static partial Regex FunctionCallStart();
 
-    [GeneratedRegex(@"""\s*\}")]
-    internal static partial Regex FunctionEnd();
+    [GeneratedRegex(@"\]\s*\}")]
+    internal static partial Regex FunctionCallEnd();
 }

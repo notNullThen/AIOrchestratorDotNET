@@ -9,6 +9,7 @@ Features:
 - Runs locally
 - Uses any local LLM model from Ollama
 - Tries to be **model-agnostic**. Currently works well with gemma4:e4b and ministral-3:3b
+- Supports LLM responses containing multiple functions.
 
 ### Installation
 

@@ -6,9 +6,6 @@ using AIOrchestrator.Core.Types;
 
 public static class FunctionsDeserializer
 {
-    private const string FunctionStart = "{\"function\":\"";
-    private const string FunctionEnd = "]}";
-
     private static readonly Regex _functionCallStartRegex =
         FunctionsDeserializerRegex.FunctionCallStart();
     private static readonly Regex _functionCallEndRegex =
@@ -44,15 +41,24 @@ public static class FunctionsDeserializer
 
     private static List<string> GetFunctionsJsonList(string aiResponse)
     {
-        var rawTextList = _functionCallStartRegex.Split(aiResponse).Skip(1).ToList();
+        var functionsJsonList = new List<string>();
 
-        var functionsJsonList = rawTextList
-            .Select(rawText =>
+        foreach (Match functionStart in _functionCallStartRegex.Matches(aiResponse))
+        {
+            var functionEnd = _functionCallEndRegex.Match(
+                aiResponse,
+                functionStart.Index + functionStart.Length
+            );
+
+            if (!functionEnd.Success)
             {
-                var rawTextWithStart = string.Concat(FunctionStart, rawText);
-                return string.Concat(_functionCallEndRegex.Split(rawTextWithStart)[0], FunctionEnd);
-            })
-            .ToList();
+                throw new JsonException("A function call has no valid ending.");
+            }
+
+            functionsJsonList.Add(
+                aiResponse[functionStart.Index..(functionEnd.Index + functionEnd.Length)]
+            );
+        }
 
         return functionsJsonList;
     }

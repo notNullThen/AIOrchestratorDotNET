@@ -81,7 +81,7 @@ Each new prompt includes the complete serialized history. There is no context-wi
 
 Normal termination happens only when invoked application code calls the inherited facade `Exit`, whose callback sets the manager's `_shouldExit` flag. The `Exit` call itself is still recorded in context after reflection returns. In multiple-call mode, changing the flag does not break the current `foreach`, so remaining calls from that model response execute before the outer loop ends.
 
-Cancellation observed inside the loop sets `_shouldExit`, then rethrows the original `OperationCanceledException`. A token that is already cancelled at method entry is checked before the `try` block and propagates without changing the flag. Any other exception sets `_shouldExit` and is wrapped with the message `An error occurred during AI conversation execution.` plus model name, user input, latest raw model output, and full context. Lower layers often add their own inner exception and context.
+Cancellation observed inside the loop sets `_shouldExit`, then rethrows the original `OperationCanceledException`. A token that is already cancelled at method entry is checked before the `try` block and propagates without changing the flag. Any other exception sets `_shouldExit` and is wrapped with the message `An error occurred during AI conversation execution.` plus the immediate failure message, model name, user input, latest raw model output, and full context. Lower layers often add their own inner exception and context.
 
 ## Management Prompt Protocol
 
@@ -139,7 +139,7 @@ There is no built-in logging. Consumers can subscribe to `OnContextUpdated`, ins
 
 ## Ollama Transport
 
-Generation uses `POST {baseUrl}/api/generate` with JSON containing model, prompt, role text, `stream: false`, and optional settings. The complete response body is read and deserialized after a successful HTTP status. `ResponseHeadersRead` avoids buffering headers and content together, but the response text itself is still fully buffered.
+Generation uses `POST {baseUrl}/api/generate` with JSON containing model, prompt, role text, `stream: false`, and optional settings. The complete response body is read before the HTTP status is evaluated so a non-success response can include the raw Ollama error body in the exception. `ResponseHeadersRead` avoids buffering headers and content together, but the response text itself is still fully buffered.
 
 Model discovery uses `GET {baseUrl}/api/tags` and returns the `models` list. The public discovery helper has a working default base URL. The manager path differs: its `ollamaBaseUrl` defaults to `null` and that explicit null is forwarded to the internal client, overriding the client's constructor default. Current manager consumers should pass an absolute URL explicitly.
 

@@ -120,7 +120,7 @@ History: {_contextHandler.GetContextJson()}
             _shouldExit = true;
             throw new Exception(
                 ErrorHandler.GetFullErrorMessage(
-                    "An error occurred during AI conversation execution."
+                    $"An error occurred during AI conversation execution.\nError: {ex.Message}"
                 ),
                 ex
             );

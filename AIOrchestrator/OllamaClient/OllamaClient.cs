@@ -84,6 +84,7 @@ internal sealed class OllamaClient(
     )
     {
         HttpResponseMessage response;
+        var responseJson = string.Empty;
         try
         {
             response = await _httpClient.SendAsync(
@@ -91,6 +92,7 @@ internal sealed class OllamaClient(
                 HttpCompletionOption.ResponseHeadersRead,
                 cancellationToken
             );
+            responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
             response.EnsureSuccessStatusCode();
         }
         catch (HttpRequestException ex)
@@ -100,10 +102,8 @@ internal sealed class OllamaClient(
                 throw new Exception("Couldn't connect to Ollama server", ex);
             }
 
-            throw new Exception("Ollama API error", ex);
+            throw new Exception($"Ollama API error: {ex.Message} Response: {responseJson}", ex);
         }
-
-        var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (string.IsNullOrWhiteSpace(responseJson))
         {

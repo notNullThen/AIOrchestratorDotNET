@@ -156,8 +156,5 @@ You MUST process the STATE and reply with EXACTLY ONE JSON function call. If the
         return FunctionsDeserializer.Deserialize<FunctionCall>(response);
     }
 
-    public void Exit()
-    {
-        _shouldExit = true;
-    }
+    public void Exit() => _shouldExit = true;
 }

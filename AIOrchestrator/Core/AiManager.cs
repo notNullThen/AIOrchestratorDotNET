@@ -21,10 +21,7 @@ public sealed class AiManager(
     private MethodInvoker? _methodInvokerField;
     private MethodInvoker _methodInvoker => _methodInvokerField ??= new MethodInvoker(ErrorHandler);
 
-    private bool Debug { get; set; }
-
     private string? _userInput;
-    private object? _aiOutput;
     private bool _shouldExit;
 
     private readonly OllamaClient _ollamaClient = new(ollamaBaseUrl, ollamaHttpTimeout);
@@ -72,8 +69,6 @@ You MUST process the STATE and reply with EXACTLY ONE JSON function call. If the
 
     public string GetManagementPrompt() => ManagementPrompt;
 
-    public void SetDebug(bool debug) => Debug = debug;
-
     public async Task ConversationAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -93,19 +88,15 @@ You MUST process the STATE and reply with EXACTLY ONE JSON function call. If the
                     continue;
                 }
 
-                _aiOutput = _methodInvoker.Execute(function, appInstance);
+                var functionResult = _methodInvoker.Execute(function, appInstance);
 
                 var functionResponse = new FunctionCallResponse
                 {
                     Function = function.Function,
                     Parameters = function.Parameters,
-                    Response = _aiOutput,
+                    Response = functionResult,
                 };
                 _contextHandler.AddToContext(functionResponse);
-                if (Debug)
-                {
-                    Console.WriteLine(_contextHandler.GetLastContextPartJson());
-                }
             }
 
             await ConversationAsync(cancellationToken);
@@ -167,7 +158,6 @@ You MUST process the STATE and reply with EXACTLY ONE JSON function call. If the
 
     public void Exit()
     {
-        Console.WriteLine($"\nOutput:\n{_aiOutput}");
         _shouldExit = true;
     }
 }

@@ -13,15 +13,11 @@ public sealed class MethodInvokerTests
         var contextHandler = new ContextHandler<FunctionCallResponse>();
         var errorHandler = new ErrorHandler("test-model", contextHandler);
         var methodInvoker = new MethodInvoker(errorHandler);
-        var functionCall = methodInvoker.Deserialize(
-            /*lang=json,strict*/
-                                 """
-            {
-              "Function": "JoinValues",
-              "Parameters": ["provided"]
-            }
-            """
-        );
+        var functionCall = new FunctionCall
+        {
+            Function = nameof(TestTarget.JoinValues),
+            Parameters = ["provided"],
+        };
 
         var result = methodInvoker.Execute(functionCall, new TestTarget());
 

@@ -8,7 +8,7 @@ public sealed class ContextHandler<T>
     private static readonly JsonSerializerOptions _jsonSerializerOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = true,
+        WriteIndented = false,
         Converters = { new JsonStringEnumConverter() },
         PropertyNameCaseInsensitive = true,
     };

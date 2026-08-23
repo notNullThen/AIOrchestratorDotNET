@@ -5,6 +5,10 @@
 
 This project is a .NET library that structurizes and handles fully local agentic functions (tools) execution via LLM model.
 
+This NuGet is used in Local Agentic AI Demo project - https://github.com/notNullThen/ai-orchestrator-dotnet
+
+### 🎬 YouTube Video Demo: https://youtu.be/qbJpvD6T8rs
+
 Features:
 - Runs locally
 - Uses any local LLM model from Ollama
@@ -50,5 +54,3 @@ var ai = new AiManager(
 );
 await ai.StartAsync(userInput);
 ```
-
-### Demo: [AI Time Manager](https://github.com/notNullThen/ai-ollama-time-manager)

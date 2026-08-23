@@ -15,6 +15,19 @@ Features:
 - Tries to be **model-agnostic**. Currently works well with gemma4:e4b and ministral-3:3b
 - Supports LLM responses containing multiple functions.
 
+### High-level overview of how it works
+
+1. The available C# functions (tools) are structurally defined and described using the `AiAppFacadeBase` class.
+1. A prepared prompt containing instructions, constraints, and tool definitions is sent to the LLM.
+1. Depending on the user-defined configuration, the LLM responds with one or more function calls.
+1. AIOrchestrator parses the response string and extracts only valid JSON objects.
+1. The parsed JSON objects are deserialized and placed into an array.
+1. The array is used to execute the C# functions sequentially.
+1. The loop repeats until the user's request is fulfilled.
+1. The constraints and instructions cause the LLM to call the `Exit()` function when the user's request is fulfilled.
+1. The `Exit()` function breaks the loop.
+
+
 ### Installation
 
 Install the NuGet package:

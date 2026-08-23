@@ -4,7 +4,6 @@ using AiAppFacade;
 using OllamaClient;
 using OllamaClient.Types;
 using Types;
-using Utilities;
 
 public sealed class AiManager(
     string modelName,

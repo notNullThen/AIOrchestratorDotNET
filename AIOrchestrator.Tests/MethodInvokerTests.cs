@@ -1,7 +1,7 @@
 namespace AIOrchestratorTests;
 
+using AIOrchestrator.Core;
 using AIOrchestrator.Core.Types;
-using AIOrchestrator.Utilities;
 
 [TestClass]
 public sealed class MethodInvokerTests

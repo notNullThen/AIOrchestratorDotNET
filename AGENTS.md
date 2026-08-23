@@ -14,7 +14,7 @@ Keep this file concise. When a change invalidates an architectural statement her
 - `AIOrchestrator/Core/AiManager.cs`: conversation lifecycle and management-prompt construction.
 - `AIOrchestrator/Core/AiAppFacade/`: application-facing facade base and function-description models.
 - `AIOrchestrator/Core/FunctionsDeserializer*.cs`: extracts one or more JSON calls from model output.
-- `AIOrchestrator/Utilities/MethodInvoker.cs`: reflection lookup and string-to-parameter conversion.
+- `AIOrchestrator/Core/MethodInvoker.cs`: reflection lookup and string-to-parameter conversion.
 - `AIOrchestrator/Core/ContextHandler.cs`: in-memory function-result history serialized back into the prompt.
 - `AIOrchestrator/Core/ErrorHandler.cs`: enriches failures with model, user input, latest model output, and history.
 - `AIOrchestrator/OllamaClient/`: internal `/api/generate` client plus the public model-listing helper.

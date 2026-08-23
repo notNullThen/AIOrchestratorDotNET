@@ -1,9 +1,9 @@
-namespace AIOrchestrator.Utilities;
+namespace AIOrchestrator.Core;
 
 using System.ComponentModel;
 using System.Reflection;
 using System.Text.Json;
-using Core.Types;
+using Types;
 
 internal class MethodInvoker
 {

@@ -21,10 +21,7 @@ internal class MethodInvoker
                     .GetType()
                     .GetMethod(
                         instruction.Function,
-                        BindingFlags.Instance
-                            | BindingFlags.Static
-                            | BindingFlags.Public
-                            | BindingFlags.NonPublic
+                        BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public
                     )
                 ?? throw new MissingMethodException(
                     $"Method {instruction.Function}() not found in {targetInstance.GetType().Name} class."

@@ -5,20 +5,26 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Types;
 
-internal sealed class OllamaClient(
-    string? baseUrl = "http://localhost:11434",
-    TimeSpan? timeout = null
-)
+internal sealed class OllamaClient
 {
-    private readonly HttpClient _httpClient = timeout is null
-        ? new()
-        : new() { Timeout = (TimeSpan)timeout };
+    public OllamaClient(string? baseUrl, TimeSpan? timeout = null)
+    {
+        _timeout = timeout;
+        _baseUrl = baseUrl ?? "http://localhost:11434";
+    }
+
+    private readonly TimeSpan? _timeout;
+
+    private readonly string _baseUrl;
+
+    private HttpClient _httpClient =>
+        _timeout is null ? new() : new() { Timeout = (TimeSpan)_timeout };
 
     public async Task<OllamaTagsResponse> GetTagsAsync(
         CancellationToken cancellationToken = default
     )
     {
-        var url = $"{baseUrl}/api/tags";
+        var url = $"{_baseUrl}/api/tags";
         HttpResponseMessage response;
         try
         {
@@ -55,7 +61,7 @@ internal sealed class OllamaClient(
     )
     {
         var requestMessage = GetRequestMessage(
-            url: $"{baseUrl}/api/generate",
+            url: $"{_baseUrl}/api/generate",
             request: new()
             {
                 Model = model,
